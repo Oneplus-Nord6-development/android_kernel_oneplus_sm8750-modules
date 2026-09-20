@@ -186,6 +186,8 @@ struct Coordinate {
 	int y;
 };
 
+#define KEY_GESTURE_START 246
+
 enum gesture_type {
 	UnknownGesture = 0,
 	DoubleTap,

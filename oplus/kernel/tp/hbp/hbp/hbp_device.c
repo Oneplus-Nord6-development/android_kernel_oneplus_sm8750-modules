@@ -76,7 +76,7 @@ static void hbp_start_flow(struct hbp_core *hbp)
 
 static int init_input_device(struct hbp_device *hbp_dev, int id)
 {
-	int ret = 0;
+	int ret = 0, i = 0;
 
 	hbp_dev->i_dev = input_allocate_device();
 	if (!hbp_dev->i_dev) {
@@ -109,7 +109,9 @@ static int init_input_device(struct hbp_device *hbp_dev, int id)
 	set_bit(INPUT_PROP_DIRECT, hbp_dev->i_dev->propbit);
 	set_bit(BTN_TOUCH, hbp_dev->i_dev->keybit);
 	set_bit(BTN_TOOL_FINGER, hbp_dev->i_dev->keybit);
-	set_bit(KEY_F4, hbp_dev->i_dev->keybit);		/*for black gesture*/
+	set_bit(KEY_WAKEUP, hbp_dev->i_dev->keybit);		/*for double tap to wake*/
+	for (i = DoubleTap; i <= FP_GESTURE_RELEASE; i++)
+		set_bit(KEY_GESTURE_START + i, hbp_dev->i_dev->keybit);
 	set_bit(KEY_POWER, hbp_dev->i_dev->keybit);		/*for apk test*/
 	set_bit(KEY_SLEEP, hbp_dev->i_dev->keybit);
 
@@ -546,6 +548,14 @@ void touch_call_fp_grip(struct hbp_device *hbp_dev, int state)
 	hbp_info("transfer girp of fp pass state:%d\n", event_data.value);
 }
 
+static void hbp_report_key(struct hbp_device *hbp_dev, unsigned int keycode)
+{
+	input_report_key(hbp_dev->i_dev, keycode, 1);
+	input_sync(hbp_dev->i_dev);
+	input_report_key(hbp_dev->i_dev, keycode, 0);
+	input_sync(hbp_dev->i_dev);
+}
+
 static void hbp_gesture_report(struct hbp_device *hbp_dev, struct gesture_info *gesture)
 {
 
@@ -582,12 +592,8 @@ static void hbp_gesture_report(struct hbp_device *hbp_dev, struct gesture_info *
 		if (gesture->type != UnknownGesture) {
 			gesture->id = hbp_dev->id;
 			hbp_core_set_gesture_coord(gesture);
-
-			//back up gesture info
-			input_report_key(hbp_dev->i_dev, KEY_F4, 1);
-			input_sync(hbp_dev->i_dev);
-			input_report_key(hbp_dev->i_dev, KEY_F4, 0);
-			input_sync(hbp_dev->i_dev);
+			hbp_report_key(hbp_dev, gesture->type == DoubleTap ?
+					KEY_WAKEUP : KEY_GESTURE_START + gesture->type);
 		} else {
 			hbp_err("detect unkown gesture\n");
 		}
