@@ -2144,7 +2144,7 @@ int oplus_ofp_hbm_handle(void *sde_encoder_virt)
 			|| hbm_enable & OPLUS_OFP_PROPERTY_FINGERPRESS_LAYER) && bl_level)
 				|| (p_oplus_ofp_params->doze_active && (hbm_enable & OPLUS_OFP_PROPERTY_FINGERPRESS_LAYER)
 					&& bl_level && !(oplus_ofp_video_mode_30hz_aod_is_enabled() && (refresh_rate == 30)))) {
-		if (oplus_ofp_video_mode_30hz_aod_is_enabled() || p_oplus_ofp_params->oplus_ofp_ramless_set_lhbm_after_120hz) {
+		if (p_oplus_ofp_params->oplus_ofp_ramless_set_lhbm_after_120hz) {
 			if (refresh_rate == 120) {
 				rc = oplus_ofp_set_panel_hbm(c_conn, true);
 				if (rc) {
@@ -3800,8 +3800,9 @@ int oplus_ofp_video_mode_aod_handle(void *sde_encoder_virt)
 	refresh_rate = display->panel->cur_mode->timing.refresh_rate;
 
 	/* due to aod sequence requirements, the aod of video mode is bound to 30hz timing */
-	if ((!oplus_ofp_get_aod_state() && (refresh_rate == 30) && (oplus_ofp_refresh_flag == OPLUS_OFP_VIDEO_AOD_STATE_READY_END))
-			|| (!oplus_ofp_get_aod_state() && (refresh_rate == 30) && p_oplus_ofp_params->ilitek_write_cmd_before_refresh_rate30hz)) {
+	if (p_oplus_ofp_params->doze_active
+			&& ((!oplus_ofp_get_aod_state() && (refresh_rate == 30) && (oplus_ofp_refresh_flag == OPLUS_OFP_VIDEO_AOD_STATE_READY_END))
+			|| (!oplus_ofp_get_aod_state() && (refresh_rate == 30) && p_oplus_ofp_params->ilitek_write_cmd_before_refresh_rate30hz))) {
 		if (oplus_ofp_get_hbm_state()) {
 			if (oplus_ofp_local_hbm_is_enabled()) {
 				rc = oplus_ofp_display_cmd_set(display, DSI_CMD_LHBM_PRESSED_ICON_OFF);
